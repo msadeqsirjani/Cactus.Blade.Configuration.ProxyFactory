@@ -1,0 +1,10 @@
+language: csharp
+mono: none
+dotnet: 2.1.502
+solution: Cactus.Blade.Configuration.sln
+install:
+  - dotnet restore
+script:
+  - dotnet msbuild /p:Configuration=Release Cactus.Blade.Configuration.sln
+  - dotnet restore
+  - dotnet test Configuration.Test/Configuration.Test.csproj

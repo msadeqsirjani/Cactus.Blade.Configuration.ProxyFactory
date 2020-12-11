@@ -1,0 +1,39 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <AssemblyName>Cactus.Blade.Configuration.ProxyFactory</AssemblyName>
+    <Version>1.2.0</Version>
+    <Authors>Mohammad Sadeq Sirjani</Authors>
+    <Product>Cactus</Product>
+    <Description>A factory that creates instances of property-only interfaces, defined at run-time, and populated with values defined in an instance of IConfiguration.</Description>
+    <PackageReleaseNotes>A factory that creates instances of property-only interfaces, defined at run-time, and populated with values defined in an instance of IConfiguration.</PackageReleaseNotes>
+    <NeutralLanguage>C#</NeutralLanguage>
+    <Copyright>@CopyRight 2020</Copyright>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <PackageIcon>cactus.png</PackageIcon>
+    <PackageProjectUrl>https://github.com/mohammadsadeqsirjani/Cactus/tree/master/Configuration.ProxyFactory</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/mohammadsadeqsirjani/Cactus/tree/master/Configuration.ProxyFactory</RepositoryUrl>
+    <RepositoryType>https://github.com/mohammadsadeqsirjani/Cactus/tree/master/Configuration.ProxyFactory</RepositoryType>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\..\Cactus.Blade.Configuration\Image\cactus.png">
+      <Pack>True</Pack>
+      <PackagePath></PackagePath>
+    </None>
+    <None Include="..\..\Cactus.Blade.Configuration\LICENSE">
+      <Pack>True</Pack>
+      <PackagePath></PackagePath>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Cactus.Blade.Collection" Version="1.2.1" />
+    <PackageReference Include="Cactus.Blade.Core" Version="1.2.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration" Version="5.0.0" />
+  </ItemGroup>
+
+</Project>
