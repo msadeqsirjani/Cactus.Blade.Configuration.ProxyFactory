@@ -1,21 +1,32 @@
-﻿using System;
+﻿using Cactus.Blade.Configuration.ObjectFactory;
+using Microsoft.Extensions.Configuration;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
 
-namespace Configuration.ProxyFactory
+namespace Cactus.Blade.Configuration.ProxyFactory
 {
     /// <summary>
     /// Static class that creates proxy instances of interfaces from configuration values.
     /// </summary>
     public static class ConfigurationProxyFactory
     {
-        private const TypeAttributes _typeAttributes = TypeAttributes.NotPublic | TypeAttributes.Class | TypeAttributes.AutoClass | TypeAttributes.AnsiClass | TypeAttributes.BeforeFieldInit | TypeAttributes.AutoLayout;
-        private const MethodAttributes _methodAttributes = MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.Virtual;
+        private const TypeAttributes TypeAttributes = System.Reflection.TypeAttributes.NotPublic |
+                                                      System.Reflection.TypeAttributes.Class |
+                                                      System.Reflection.TypeAttributes.AutoClass |
+                                                      System.Reflection.TypeAttributes.AnsiClass |
+                                                      System.Reflection.TypeAttributes.BeforeFieldInit |
+                                                      System.Reflection.TypeAttributes.AutoLayout;
 
-        private static readonly ConcurrentDictionary<Type, Type> _proxyCache = new ConcurrentDictionary<Type, Type>();
+        private const MethodAttributes MethodAttributes = System.Reflection.MethodAttributes.Public |
+                                                          System.Reflection.MethodAttributes.HideBySig |
+                                                          System.Reflection.MethodAttributes.SpecialName |
+                                                          System.Reflection.MethodAttributes.Virtual;
+
+        private static readonly ConcurrentDictionary<Type, Type> ProxyCache = new ConcurrentDictionary<Type, Type>();
 
         /// <summary>
         /// Returns an instance of a proxy type that implements the interface specified by the <typeparamref name="T"/>
@@ -43,7 +54,8 @@ namespace Configuration.ProxyFactory
         /// <exception cref="ArgumentException">
         /// If <typeparamref name="T"/> is not an interface or has any declared methods, events, or write-only properties.
         /// </exception>
-        public static T CreateProxy<T>(this IConfiguration configuration, DefaultTypes defaultTypes = null, ValueConverters valueConverters = null) =>
+        public static T CreateProxy<T>(this IConfiguration configuration, DefaultTypes defaultTypes = null,
+            ValueConverters valueConverters = null) =>
             (T)configuration.CreateProxy(typeof(T), defaultTypes, valueConverters);
 
         /// <summary>
@@ -73,11 +85,16 @@ namespace Configuration.ProxyFactory
         /// <exception cref="ArgumentException">
         /// If <paramref name="type"/> is not an interface or has any declared methods, events, or write-only properties.
         /// </exception>
-        public static object CreateProxy(this IConfiguration configuration, Type type, DefaultTypes defaultTypes = null, ValueConverters valueConverters = null)
+        public static object CreateProxy(this IConfiguration configuration, Type type, DefaultTypes defaultTypes = null,
+            ValueConverters valueConverters = null)
         {
-            if (configuration == null) throw new ArgumentNullException(nameof(configuration));
-            if (type == null) throw new ArgumentNullException(nameof(type));
-            var proxyType = _proxyCache.GetOrAdd(type, CreateProxyType);
+            if (configuration.IsNull())
+                throw new ArgumentNullException(nameof(configuration));
+            if (type.IsNull())
+                throw new ArgumentNullException(nameof(type));
+
+            var proxyType = ProxyCache.GetOrAdd(type, CreateProxyType);
+
             return configuration.Create(proxyType, defaultTypes, valueConverters);
         }
 
@@ -94,18 +111,25 @@ namespace Configuration.ProxyFactory
 
                 if (property.CanWrite)
                 {
-                    var fieldBuilder = typeBuilder.DefineField(backingFieldName, property.PropertyType, FieldAttributes.Private);
-                    var propertyBuilder = typeBuilder.DefineProperty(property.Name, PropertyAttributes.HasDefault, property.PropertyType, null);
-                    var getMethodBuilder = GetGetMethodBuilder(property.Name, property.PropertyType, typeBuilder, fieldBuilder);
-                    var setMethodBuilder = GetSetMethodBuilder(property.Name, property.PropertyType, typeBuilder, fieldBuilder);
+                    var fieldBuilder = typeBuilder.DefineField(backingFieldName, property.PropertyType,
+                        FieldAttributes.Private);
+                    var propertyBuilder = typeBuilder.DefineProperty(property.Name, PropertyAttributes.HasDefault,
+                        property.PropertyType, null);
+                    var getMethodBuilder =
+                        GetGetMethodBuilder(property.Name, property.PropertyType, typeBuilder, fieldBuilder);
+                    var setMethodBuilder =
+                        GetSetMethodBuilder(property.Name, property.PropertyType, typeBuilder, fieldBuilder);
                     propertyBuilder.SetGetMethod(getMethodBuilder);
                     propertyBuilder.SetSetMethod(setMethodBuilder);
                 }
                 else
                 {
-                    var fieldBuilder = typeBuilder.DefineField(backingFieldName, property.PropertyType, FieldAttributes.Private | FieldAttributes.InitOnly);
-                    var propertyBuilder = typeBuilder.DefineProperty(property.Name, PropertyAttributes.None, property.PropertyType, null);
-                    var getMethodBuilder = GetGetMethodBuilder(property.Name, property.PropertyType, typeBuilder, fieldBuilder);
+                    var fieldBuilder = typeBuilder.DefineField(backingFieldName, property.PropertyType,
+                        FieldAttributes.Private | FieldAttributes.InitOnly);
+                    var propertyBuilder = typeBuilder.DefineProperty(property.Name, PropertyAttributes.None,
+                        property.PropertyType, null);
+                    var getMethodBuilder =
+                        GetGetMethodBuilder(property.Name, property.PropertyType, typeBuilder, fieldBuilder);
                     propertyBuilder.SetGetMethod(getMethodBuilder);
                     readonlyFields.Add((fieldBuilder, property.Name));
                 }
@@ -120,54 +144,61 @@ namespace Configuration.ProxyFactory
         {
             var assemblyName = "<" + type.Name + ">a__RockLibDynamicAssembly";
             var name = "<" + type.Name + ">c__RockLibProxyClass";
-            var assemblyBuilder = AssemblyBuilder.DefineDynamicAssembly(new AssemblyName(assemblyName), AssemblyBuilderAccess.Run);
+            var assemblyBuilder =
+                AssemblyBuilder.DefineDynamicAssembly(new AssemblyName(assemblyName), AssemblyBuilderAccess.Run);
             var moduleBuilder = assemblyBuilder.DefineDynamicModule("MainModule");
-            var typeBuilder = moduleBuilder.DefineType(name, _typeAttributes, typeof(object), new[] { type });
+            var typeBuilder = moduleBuilder.DefineType(name, TypeAttributes, typeof(object), new[] { type });
+
             return typeBuilder;
         }
 
-        private static void AddConstructor(TypeBuilder typeBuilder, List<(FieldBuilder FieldBuilder, string PropertyName)> readonlyFields)
+        private static void AddConstructor(TypeBuilder typeBuilder,
+            IReadOnlyList<(FieldBuilder FieldBuilder, string PropertyName)> readonlyFields)
         {
             var constructorBuilder = typeBuilder.DefineConstructor(
-                MethodAttributes.Public, CallingConventions.Standard, readonlyFields.Select(f => f.FieldBuilder.FieldType).ToArray());
-            var il = constructorBuilder.GetILGenerator();
+                MethodAttributes.Public, CallingConventions.Standard,
+                readonlyFields.Select(f => f.FieldBuilder.FieldType).ToArray());
+            var ilGenerator = constructorBuilder.GetILGenerator();
 
-            il.Emit(OpCodes.Ldarg_0);
-            il.Emit(OpCodes.Call, typeof(object).GetTypeInfo().GetConstructors()[0]);
+            ilGenerator.Emit(OpCodes.Ldarg_0);
+            ilGenerator.Emit(OpCodes.Call, typeof(object).GetTypeInfo().GetConstructors()[0]);
 
-            for (int i = 0; i < readonlyFields.Count; i++)
+            for (var i = 0; i < readonlyFields.Count; i++)
             {
                 constructorBuilder.DefineParameter(i + 1, ParameterAttributes.None, readonlyFields[i].PropertyName);
-                il.Emit(OpCodes.Ldarg_0);
-                il.Emit(OpCodes.Ldarg, i + 1);
-                il.Emit(OpCodes.Stfld, readonlyFields[i].FieldBuilder);
+                ilGenerator.Emit(OpCodes.Ldarg_0);
+                ilGenerator.Emit(OpCodes.Ldarg, i + 1);
+                ilGenerator.Emit(OpCodes.Stfld, readonlyFields[i].FieldBuilder);
             }
 
-            il.Emit(OpCodes.Ret);
+            ilGenerator.Emit(OpCodes.Ret);
         }
 
-        private static MethodBuilder GetGetMethodBuilder(string name, Type type, TypeBuilder typeBuilder, FieldBuilder fieldBuilder)
+        private static MethodBuilder GetGetMethodBuilder(string name, Type type, TypeBuilder typeBuilder,
+            FieldInfo fieldBuilder)
         {
-            var getMethodBuilder = typeBuilder.DefineMethod("get_" + name, _methodAttributes, type, Type.EmptyTypes);
-            var il = getMethodBuilder.GetILGenerator();
+            var getMethodBuilder = typeBuilder.DefineMethod("get_" + name, MethodAttributes, type, Type.EmptyTypes);
+            var ilGenerator = getMethodBuilder.GetILGenerator();
 
-            il.Emit(OpCodes.Ldarg_0);
-            il.Emit(OpCodes.Ldfld, fieldBuilder);
+            ilGenerator.Emit(OpCodes.Ldarg_0);
+            ilGenerator.Emit(OpCodes.Ldfld, fieldBuilder);
 
-            il.Emit(OpCodes.Ret);
+            ilGenerator.Emit(OpCodes.Ret);
             return getMethodBuilder;
         }
 
-        private static MethodBuilder GetSetMethodBuilder(string name, Type type, TypeBuilder typeBuilder, FieldBuilder fieldBuilder)
+        private static MethodBuilder GetSetMethodBuilder(string name, Type type, TypeBuilder typeBuilder,
+            FieldInfo fieldBuilder)
         {
-            var setMethodBuilder = typeBuilder.DefineMethod("set_" + name, _methodAttributes, null, new[] { type });
-            var il = setMethodBuilder.GetILGenerator();
+            var setMethodBuilder = typeBuilder.DefineMethod("set_" + name, MethodAttributes, null, new[] { type });
+            var ilGenerator = setMethodBuilder.GetILGenerator();
 
-            il.Emit(OpCodes.Ldarg_0);
-            il.Emit(OpCodes.Ldarg_1);
-            il.Emit(OpCodes.Stfld, fieldBuilder);
+            ilGenerator.Emit(OpCodes.Ldarg_0);
+            ilGenerator.Emit(OpCodes.Ldarg_1);
+            ilGenerator.Emit(OpCodes.Stfld, fieldBuilder);
 
-            il.Emit(OpCodes.Ret);
+            ilGenerator.Emit(OpCodes.Ret);
+
             return setMethodBuilder;
         }
 
@@ -180,11 +211,13 @@ namespace Configuration.ProxyFactory
             {
                 switch (member)
                 {
-                    case MethodInfo m when !m.Name.StartsWith("get_") && !m.Name.StartsWith("set_") && !m.Name.StartsWith("add_") && !m.Name.StartsWith("remove_"):
+                    case MethodInfo m when !m.Name.StartsWith("get_") && !m.Name.StartsWith("set_") &&
+                                           !m.Name.StartsWith("add_") && !m.Name.StartsWith("remove_"):
                         throw Exceptions.TargetInterfaceCannotHaveAnyMethods(type, m);
                     case EventInfo e:
                         throw Exceptions.TargetInterfaceCannotHaveAnyEvents(type, e);
-                    case PropertyInfo p when p.CanRead && p.GetGetMethod().GetParameters().Length > 0 || p.CanWrite && p.GetSetMethod().GetParameters().Length > 1:
+                    case PropertyInfo p when p.CanRead && p.GetGetMethod().GetParameters().Length > 0 ||
+                                             p.CanWrite && p.GetSetMethod().GetParameters().Length > 1:
                         throw Exceptions.TargetInterfaceCannotHaveAnyIndexerProperties(type, p);
                     case PropertyInfo p when !p.CanRead:
                         throw Exceptions.TargetInterfaceCannotHaveAnyWriteOnlyProperties(type, p);
