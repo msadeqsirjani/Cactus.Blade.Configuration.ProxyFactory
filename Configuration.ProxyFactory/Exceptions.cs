@@ -2,7 +2,7 @@
 using System.Linq;
 using System.Reflection;
 
-namespace Configuration.ProxyFactory
+namespace Cactus.Blade.Configuration.ProxyFactory
 {
     internal static class Exceptions
     {
