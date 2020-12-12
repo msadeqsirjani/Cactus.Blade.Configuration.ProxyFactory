@@ -1,10 +1,10 @@
 language: csharp
 mono: none
 dotnet: 2.1.502
-solution: Cactus.Blade.Configuration.sln
+solution: Cactus.Blade.Configuration.ProxyFactory.sln
 install:
   - dotnet restore
 script:
-  - dotnet msbuild /p:Configuration=Release Cactus.Blade.Configuration.sln
+  - dotnet msbuild /p:Configuration.ProxyFactory=Release Cactus.Blade.Configuration.ProxyFactory.sln
   - dotnet restore
-  - dotnet test Configuration.Test/Configuration.Test.csproj
+  - dotnet test Configuration.ProxyFactory.Test/Configuration.ProxyFactory.Test.csproj
