@@ -17,14 +17,15 @@
     <RepositoryType>https://github.com/mohammadsadeqsirjani/Cactus/tree/master/Configuration.ProxyFactory</RepositoryType>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+    <RootNamespace>Cactus.Blade.Configuration.ProxyFactory</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
-    <None Include="..\..\Cactus.Blade.Configuration\Image\cactus.png">
+    <None Include="..\Image\cactus.png">
       <Pack>True</Pack>
       <PackagePath></PackagePath>
     </None>
-    <None Include="..\..\Cactus.Blade.Configuration\LICENSE">
+    <None Include="..\LICENSE">
       <Pack>True</Pack>
       <PackagePath></PackagePath>
     </None>
@@ -32,6 +33,7 @@
 
   <ItemGroup>
     <PackageReference Include="Cactus.Blade.Collection" Version="1.2.1" />
+    <PackageReference Include="Cactus.Blade.Configuration.ObjectFactory" Version="1.2.0" />
     <PackageReference Include="Cactus.Blade.Core" Version="1.2.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration" Version="5.0.0" />
   </ItemGroup>
