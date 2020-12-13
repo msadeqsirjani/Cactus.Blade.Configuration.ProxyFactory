@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
     <AssemblyName>Cactus.Blade.Configuration.ProxyFactory</AssemblyName>
-    <Version>1.2.0</Version>
+    <Version>1.2.2</Version>
     <Authors>Mohammad Sadeq Sirjani</Authors>
     <Product>Cactus</Product>
     <Description>A factory that creates instances of property-only interfaces, defined at run-time, and populated with values defined in an instance of IConfiguration.</Description>
@@ -32,8 +32,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Cactus.Blade.Collection" Version="1.2.1" />
-    <PackageReference Include="Cactus.Blade.Configuration.ObjectFactory" Version="1.2.0" />
+    <PackageReference Include="Cactus.Blade.Collection" Version="1.2.2" />
+    <PackageReference Include="Cactus.Blade.Configuration.ObjectFactory" Version="1.2.2" />
     <PackageReference Include="Cactus.Blade.Core" Version="1.2.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration" Version="5.0.0" />
   </ItemGroup>
